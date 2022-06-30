@@ -6,27 +6,46 @@ const Board = () => {
     const CANVAS_WIDTH = document.documentElement.clientWidth/4;
     const CANVAS_HEIGHT = document.documentElement.clientWidth/2;
     const BLOCK_SIZE = CANVAS_WIDTH/10;
+    const pos = useRef({x:0,y:0});
+
     useEffect(()=>{
         const ctx = canvas.current.getContext("2d");
         ctx.canvas.width = CANVAS_WIDTH+1;
         ctx.canvas.height = CANVAS_HEIGHT+1;
         ctx.lineWidth=1;
         ctx.strokeStyle='#000000';
-        for(let x = 0; x < 10 ; x++){
-            for(let y = 0; y < 20; y++){
-                ctx.strokeRect(x*BLOCK_SIZE,y*BLOCK_SIZE,BLOCK_SIZE,BLOCK_SIZE)
+        ctx.fillStyle='#FFFFFF';
+        for(let i = 0; i < 10 ; i++){
+            for(let j = 0; j < 20; j++){
+                ctx.fillRect(i*BLOCK_SIZE+1,j*BLOCK_SIZE+1,BLOCK_SIZE,BLOCK_SIZE);
+                ctx.strokeRect(i*BLOCK_SIZE+0.5,j*BLOCK_SIZE+0.5,BLOCK_SIZE-1,BLOCK_SIZE-1);
             }
         }
 
         ctx.fillStyle='#FF6D6A';
-        for(let x = 0; x < 4; x++){
-            ctx.fillRect(x*BLOCK_SIZE+0.5,19*BLOCK_SIZE+0.5,BLOCK_SIZE-1,BLOCK_SIZE-1);
+        for(let i = pos.current['x']; i < pos.current['x']+4; i++){
+            ctx.fillRect(i*BLOCK_SIZE+1,19*BLOCK_SIZE+1,BLOCK_SIZE-2,BLOCK_SIZE-2);
         }
     })
     return (
-        <CanvasContainer>
-            <canvas ref = {canvas}/>
-        </CanvasContainer>
+        <>
+            <button onClick={()=>{
+                const ctx = canvas.current.getContext("2d");
+                ctx.fillStyle='#FFFFFF';
+                for(let i = pos.current['x']; i < pos.current['x']+4; i++){
+                    ctx.fillRect(i*BLOCK_SIZE+1,19*BLOCK_SIZE+1,BLOCK_SIZE,BLOCK_SIZE);
+                    ctx.strokeRect(i*BLOCK_SIZE+0.5,19*BLOCK_SIZE+0.5,BLOCK_SIZE-1,BLOCK_SIZE-1);
+                }
+                pos.current['x']=pos.current['x']+1;
+                ctx.fillStyle='#FF6D6A';
+                for(let i = pos.current['x']; i < pos.current['x']+4; i++){
+                    ctx.fillRect(i*BLOCK_SIZE+1,19*BLOCK_SIZE+1,BLOCK_SIZE-2,BLOCK_SIZE-2);
+                }
+            }}>TEST</button>
+            <CanvasContainer>
+                <canvas ref = {canvas}/>
+            </CanvasContainer>
+        </>
     )
 }
 const CanvasContainer = styled.div`
