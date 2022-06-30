@@ -2,6 +2,7 @@ import React, {useRef,useEffect} from 'react';
 import PropTypes from "prop-types";
 import { useSelector } from "react-redux";
 import styled from 'styled-components';
+import { moveDown } from '../actions';
 
 const Board = ({onMoveLeft,onMoveRight,onMoveUp,onMoveDown,onSetBoard,onSetPos}) => {
     const canvas = useRef(null);
@@ -10,7 +11,7 @@ const Board = ({onMoveLeft,onMoveRight,onMoveUp,onMoveDown,onSetBoard,onSetPos})
     const BLOCK_SIZE = CANVAS_WIDTH/10;
     const pos = useSelector((state) => state.tetrisFunc.pos);
     const board = useSelector((state) => state.tetrisFunc.board);
-
+    const time = useRef({start: 0, elapsed: 0, level: 1000});
     function CanvasInit(){
         const ctx = canvas.current.getContext("2d");
         ctx.canvas.width = CANVAS_WIDTH+1;
@@ -89,10 +90,24 @@ const Board = ({onMoveLeft,onMoveRight,onMoveUp,onMoveDown,onSetBoard,onSetPos})
         }
     }
 
+    function animate(now = 0){
+        // 지난 시간을 업데이트한다.
+        time.current.elapsed = now - time.current.start;
+        // 지난 시간이 현재 레벨의 시간을 초과했는지 확인한다.
+        if (time.current.elapsed > time.current.level) {
+            // 현재 시간을 다시 측정한다.
+            time.current.start = now;
+            MoveDown();
+        };
+        
+        requestAnimationFrame(animate);
+    }
+
     useEffect(()=>{
         CanvasInit();
+        animate();
     })
-    
+
     return (
         <Container>
             <ButtonContainer>
