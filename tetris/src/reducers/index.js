@@ -1,6 +1,6 @@
 import { combineReducers } from 'redux';
-import numbercount from './countReducer';
+import tetrisFunc from './tetrisReducer';
 
 export default combineReducers({
-    numbercount
+    tetrisFunc
 });

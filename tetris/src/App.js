@@ -1,10 +1,8 @@
-import CounterContainer from './containers/CouterContainer';
-import Board from './components/Board';
+import TetrisContainer from './containers/TetrisContainer';
 function App() {
   return (
     <div className="App">
-      <CounterContainer />
-      <Board/>
+      <TetrisContainer/>
     </div>
   );
 }
