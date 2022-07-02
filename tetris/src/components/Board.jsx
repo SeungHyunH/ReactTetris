@@ -112,6 +112,37 @@ const Board = () => {
         Draw();
     }
 
+    function MoveFloor(){
+        Erase();
+        let result = Collide();
+        while(result === 0){
+            pos.current[1]+=1;
+            result = Collide();
+        }
+        if(result === 2){
+            pos.current[1]-=1;
+            const ctx = canvas.current.getContext("2d");
+            ctx.fillStyle='#FF6D6A';
+            const halfBlockSize = (currentBlock.current.length-1)/2;
+            for(let i = 0; i < currentBlock.current.length; i++){
+                for(let j = 0; j < currentBlock.current.length; j++){
+                    const nx = i+pos.current[0]-halfBlockSize;
+                    const ny = j+pos.current[1]-halfBlockSize;
+                    if(currentBlock.current[j][i]){
+                        board.current[nx][ny]=true;
+                        ctx.fillRect(nx*BLOCK_SIZE.current+1,ny*BLOCK_SIZE.current+1,BLOCK_SIZE.current-2,BLOCK_SIZE.current-2);
+                    }
+                }
+            }
+            pos.current[0]=2;
+            pos.current[1]=2;
+        }else{
+            pos.current[1]-=1; 
+            moveStop.current=true;
+        }
+        Draw();
+    }
+
     function Collide(){
         const halfBlockSize = (currentBlock.current.length-1)/2;
         for(let i = 0; i < currentBlock.current.length; i++){
@@ -156,6 +187,7 @@ const Board = () => {
                 <Button onClick={MoveLeft}>왼쪽</Button>
                 <Button onClick={MoveUp}>위쪽</Button>
                 <Button onClick={MoveDown}>아래쪽</Button>
+                <Button onClick={MoveFloor}>맨 아래로 놓기</Button>
                 <Button onClick={CanvasInit}>캔퍼스그리기</Button>
                 <Button onClick={()=>{pos.current=[2,2];CanvasInit();}}>좌표초기화</Button>
                 <Button onClick={()=>alert(pos.current)}>좌표출력</Button>
