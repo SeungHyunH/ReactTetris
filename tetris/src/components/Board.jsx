@@ -13,7 +13,7 @@ const Board = () => {
     const currentBlockIndex = useRef(0);
     const currentRotate = useRef(0);
     const blockList = useRef(null);
-    const board = useRef(Array.from(Array(10),()=>Array(20).fill(false)))
+    const board = useRef(Array.from(Array(20),()=>Array(10).fill(false)))
     const moveStop = useRef(false);
 
     function Draw(){
@@ -58,6 +58,22 @@ const Board = () => {
         Draw();
     }
 
+    function CanvasDraw(){
+        const ctx = canvas.current.getContext("2d");
+        ctx.strokeStyle='#000000';
+        for(let i = 0; i < 10 ; i++){
+            for(let j = 0; j < 20; j++){
+                if(board.current[j][i]){
+                    ctx.fillStyle='#FF6D6A'; 
+                }else{
+                    ctx.fillStyle='#FFFFFF';
+                }
+                ctx.fillRect(i*BLOCK_SIZE.current+1,j*BLOCK_SIZE.current+1,BLOCK_SIZE.current-2,BLOCK_SIZE.current-2);
+                ctx.strokeRect(i*BLOCK_SIZE.current+0.5,j*BLOCK_SIZE.current+0.5,BLOCK_SIZE.current-1,BLOCK_SIZE.current-1);
+            }
+        }
+    }
+
     function MoveRight(){
         Erase();
         pos.current[0]+=1;
@@ -96,11 +112,16 @@ const Board = () => {
                         const nx = i+pos.current[0]-halfBlockSize;
                         const ny = j+pos.current[1]-halfBlockSize;
                         if(currentBlock.current[j][i]){
-                            board.current[nx][ny]=true;
+                            board.current[ny][nx]=true;
                             ctx.fillRect(nx*BLOCK_SIZE.current+1,ny*BLOCK_SIZE.current+1,BLOCK_SIZE.current-2,BLOCK_SIZE.current-2);
                         }
                     }
                 }
+
+                //라인삭제 검사함수
+                LineCheck();
+
+                //좌표초기화
                 pos.current[0]=2;
                 pos.current[1]=2;
                 break;
@@ -121,28 +142,51 @@ const Board = () => {
             pos.current[1]+=1;
             result = Collide();
         }
-        if(result === 2){
+        if(result === 2){//블록과 충돌 or 맨 아래벽과 충돌
             pos.current[1]-=1;
             const ctx = canvas.current.getContext("2d");
             ctx.fillStyle='#FF6D6A';
+
+            //보드에 현재블록을 추가 및 그리기
             const halfBlockSize = (currentBlock.current.length-1)/2;
             for(let i = 0; i < currentBlock.current.length; i++){
                 for(let j = 0; j < currentBlock.current.length; j++){
                     const nx = i+pos.current[0]-halfBlockSize;
                     const ny = j+pos.current[1]-halfBlockSize;
                     if(currentBlock.current[j][i]){
-                        board.current[nx][ny]=true;
+                        board.current[ny][nx]=true;
                         ctx.fillRect(nx*BLOCK_SIZE.current+1,ny*BLOCK_SIZE.current+1,BLOCK_SIZE.current-2,BLOCK_SIZE.current-2);
                     }
                 }
             }
+
+            //라인삭제 검사함수
+            LineCheck();
+
+            //좌표 초기화
             pos.current[0]=2;
             pos.current[1]=2;
-        }else{
+        }else{//게임 종료시
             pos.current[1]-=1; 
             moveStop.current=true;
         }
         Draw();
+    }
+
+    function LineCheck(){
+        const halfBlockSize = (currentBlock.current.length-1)/2;
+        for(let i = pos.current[1]+halfBlockSize; i >= pos.current[1]-halfBlockSize; i--){
+            let check = true;
+            if(i > 19){continue;}
+            for(let j = 0; j < 10; j++){
+                if(!board.current[i][j]){check=false;break;}
+            }
+            if(check){
+                board.current.splice(i,1);
+                board.current.splice(0,0,Array(10).fill(false));
+                CanvasDraw();
+            }
+        }
     }
 
     function Rotate(){
@@ -165,7 +209,7 @@ const Board = () => {
                             if(returnBlock[y][x]){
                                 const tx = nx + x +pos.current[0]-halfBlockSize;
                                 const ty = ny + y +pos.current[1]-halfBlockSize;
-                                if(tx<0||tx>9||ty<0||ty>19||board.current[tx][ty]){
+                                if(tx<0||tx>9||ty<0||ty>19||board.current[ty][tx]){
                                     isRotate = false;
                                     break;
                                 }
@@ -196,7 +240,7 @@ const Board = () => {
                             if(returnBlock[y][x]){
                                 const tx = nx + x +pos.current[0]-halfBlockSize;
                                 const ty = ny + y +pos.current[1]-halfBlockSize;
-                                if(tx<0||tx>9||ty<0||ty>19||board.current[tx][ty]){
+                                if(tx<0||tx>9||ty<0||ty>19||board.current[ty][tx]){
                                     isRotate = false;
                                     break;
                                 }
@@ -228,7 +272,7 @@ const Board = () => {
                 if(currentBlock.current[j][i]){
                     if(nx<0||nx>9||ny<0){
                         return 1;
-                    }else if(ny>19||board.current[nx][ny]){//충돌
+                    }else if(ny>19||board.current[ny][nx]){//충돌
                         if(ny === 0){return 3;}//맨위에서 충돌시 게임종료
                         return 2;
                     }
@@ -273,7 +317,6 @@ const Board = () => {
             <canvas ref = {canvas}/>
             <ButtonContainer>
                 <Button onClick={Rotate}>회전</Button>
-                <Button onClick={MoveLeft}>왼쪽</Button>
                 <Button onClick={MoveUp}>위쪽</Button>
                 <Button onClick={MoveDown}>아래쪽</Button>
                 <Button onClick={MoveFloor}>맨 아래로 놓기</Button>
