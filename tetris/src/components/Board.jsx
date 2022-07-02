@@ -57,50 +57,78 @@ const Board = () => {
     }
 
     function MoveRight(){
-        const ctx = canvas.current.getContext("2d");
-        Erase(ctx);
+        Erase();
         pos.current[0]+=1;
-        if(Collide()){pos.current[0]-=1;}
-        Draw(ctx);
+        if(Collide()===1){pos.current[0]-=1;}
+        Draw();
     }
 
     function MoveLeft(){
-        const ctx = canvas.current.getContext("2d");
-        Erase(ctx);
+        Erase();
         pos.current[0]-=1;
-        if(Collide()){pos.current[0]+=1;}
-        Draw(ctx);
+        if(Collide()===1){pos.current[0]+=1;}
+        Draw();
     }
 
     function MoveUp(){
-        const ctx = canvas.current.getContext("2d");
-        Erase(ctx);
+        Erase();
         pos.current[1]-=1;
-        if(Collide()){moveStop.current=true;pos.current[1]+=1;}
-        Draw(ctx);
+        if(Collide()===1){moveStop.current=true;pos.current[1]+=1;}
+        Draw();
     }
 
     
     function MoveDown(){
-        const ctx = canvas.current.getContext("2d");
-        Erase(ctx);
+        Erase();
         pos.current[1]+=1;
-        if(Collide()){moveStop.current=true;pos.current[1]-=1;}
-        Draw(ctx);
+        switch(Collide()){
+            case 0://안 부딛쳤을때
+                break;
+            case 2://맨 아래나 블록에 닿았을 때
+                pos.current[1]-=1;
+                const ctx = canvas.current.getContext("2d");
+                ctx.fillStyle='#FF6D6A';
+                const halfBlockSize = (currentBlock.current.length-1)/2;
+                for(let i = 0; i < currentBlock.current.length; i++){
+                    for(let j = 0; j < currentBlock.current.length; j++){
+                        const nx = i+pos.current[0]-halfBlockSize;
+                        const ny = j+pos.current[1]-halfBlockSize;
+                        if(currentBlock.current[j][i]){
+                            board.current[nx][ny]=true;
+                            ctx.fillRect(nx*BLOCK_SIZE.current+1,ny*BLOCK_SIZE.current+1,BLOCK_SIZE.current-2,BLOCK_SIZE.current-2);
+                        }
+                    }
+                }
+                pos.current[0]=2;
+                pos.current[1]=2;
+                break;
+            case 3://게임종료
+                pos.current[1]-=1; 
+                moveStop.current=true;
+                break;
+            default:
+                break;
+        }
+        Draw();
     }
 
     function Collide(){
-        const halfBlockSize = (currentBlock.current.length-1)/2
+        const halfBlockSize = (currentBlock.current.length-1)/2;
         for(let i = 0; i < currentBlock.current.length; i++){
             for(let j = 0; j < currentBlock.current.length; j++){
                 const nx = i+pos.current[0]-halfBlockSize;
                 const ny = j+pos.current[1]-halfBlockSize;
-                if((currentBlock.current[j][i] &&(nx<0||nx>9||ny<0||ny>=19||board.current[j][i]))){
-                    return true;
+                if(currentBlock.current[j][i]){
+                    if(nx<0||nx>9||ny<0){
+                        return 1;
+                    }else if(ny>19||board.current[nx][ny]){//충돌
+                        if(ny === 0){return 3;}//맨위에서 충돌시 게임종료
+                        return 2;
+                    }
                 }
             }
         }
-        return false;
+        return 0;
     }
 
     function animate(now = 0){
