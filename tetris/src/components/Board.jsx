@@ -1,6 +1,7 @@
 import React, {useRef,useEffect} from 'react';
 import styled from 'styled-components';
 import BLOCK from '../util/block';
+import * as kick from '../util/kickData';
 const Board = () => {
     const canvas = useRef(null);
     const CANVAS_WIDTH = useRef(document.documentElement.clientWidth/4);
@@ -9,6 +10,7 @@ const Board = () => {
     const pos = useRef([2,2]);
     const time = useRef({start: 0, elapsed: 0, level: 1000});
     const currentBlock = useRef(BLOCK[0]);
+    const currentBlockIndex = useRef(0);
     const currentRotate = useRef(0);
     const blockList = useRef(null);
     const board = useRef(Array.from(Array(10),()=>Array(20).fill(false)))
@@ -143,6 +145,80 @@ const Board = () => {
         Draw();
     }
 
+    function Rotate(){
+        Erase();
+        const returnBlock = Array.from(Array(currentBlock.current.length),()=>Array(currentBlock.current.length).fill(0));
+        for (let i = currentBlock.current.length - 1; i >= 0; i--) {
+            for (let j = currentBlock.current.length - 1; j >= 0; j--) {
+              returnBlock[i][j] = currentBlock.current[currentBlock.current.length - j - 1][i];
+            }
+        }
+        const halfBlockSize = (currentBlock.current.length-1)/2;
+        switch(currentBlockIndex.current){
+            case 0://I
+                for(let i = 0; i < 5; i++){
+                    const nx = kick.KICK_DATA_I[currentRotate.current][i][0];
+                    const ny = kick.KICK_DATA_I[currentRotate.current][i][1];
+                    let isRotate = true;
+                    for(let x = 0; x < returnBlock.length; x++){
+                        for(let y = 0; y < returnBlock.length; y++){
+                            if(returnBlock[y][x]){
+                                const tx = nx + x +pos.current[0]-halfBlockSize;
+                                const ty = ny + y +pos.current[1]-halfBlockSize;
+                                if(tx<0||tx>9||ty<0||ty>19||board.current[tx][ty]){
+                                    isRotate = false;
+                                    break;
+                                }
+                            }
+                        }
+                        if(!isRotate){
+                            break;
+                        }
+                    }
+                    if(isRotate){//회전 성공시
+                        pos.current[0]+=nx;
+                        pos.current[1]+=ny;
+                        currentBlock.current = returnBlock;
+                        currentRotate.current = (currentRotate.current+1)%4;
+                        break;
+                    }
+                }
+                break;
+            case 3://O
+                break;
+            default://나머지
+                for(let i = 0; i < 5; i++){
+                    const nx = kick.KICK_DATA[currentRotate.current][i][0];
+                    const ny = kick.KICK_DATA[currentRotate.current][i][1];
+                    let isRotate = true;
+                    for(let x = 0; x < returnBlock.length; x++){
+                        for(let y = 0; y < returnBlock.length; y++){
+                            if(returnBlock[y][x]){
+                                const tx = nx + x +pos.current[0]-halfBlockSize;
+                                const ty = ny + y +pos.current[1]-halfBlockSize;
+                                if(tx<0||tx>9||ty<0||ty>19||board.current[tx][ty]){
+                                    isRotate = false;
+                                    break;
+                                }
+                            }
+                        }
+                        if(!isRotate){
+                            break;
+                        }
+                    }
+                    if(isRotate){//회전 성공시
+                        pos.current[0]+=nx;
+                        pos.current[1]+=ny;
+                        currentBlock.current = returnBlock;
+                        currentRotate.current = (currentRotate.current+1)%4;
+                        break;
+                    }
+                }            
+                break;
+        }
+        Draw();
+    }
+
     function Collide(){
         const halfBlockSize = (currentBlock.current.length-1)/2;
         for(let i = 0; i < currentBlock.current.length; i++){
@@ -195,7 +271,18 @@ const Board = () => {
                 <Button onClick={()=>{moveStop.current=false;animate();}}>시작</Button>
             </ButtonContainer>
             <canvas ref = {canvas}/>
-            <div style={{width:'300px'}}/>
+            <ButtonContainer>
+                <Button onClick={Rotate}>회전</Button>
+                <Button onClick={MoveLeft}>왼쪽</Button>
+                <Button onClick={MoveUp}>위쪽</Button>
+                <Button onClick={MoveDown}>아래쪽</Button>
+                <Button onClick={MoveFloor}>맨 아래로 놓기</Button>
+                <Button onClick={CanvasInit}>캔퍼스그리기</Button>
+                <Button onClick={()=>{pos.current=[2,2];CanvasInit();}}>좌표초기화</Button>
+                <Button onClick={()=>alert(pos.current)}>좌표출력</Button>
+                <Button onClick={()=>moveStop.current=true}>멈추기</Button>
+                <Button onClick={()=>{moveStop.current=false;animate();}}>시작</Button>
+            </ButtonContainer>
         </Container>
     )
 }
