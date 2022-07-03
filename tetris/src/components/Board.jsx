@@ -2,17 +2,18 @@ import React, {useRef,useEffect} from 'react';
 import styled from 'styled-components';
 import BLOCK from '../util/block';
 import * as kick from '../util/kickData';
+import POS from '../util/posData';
 const Board = () => {
     const canvas = useRef(null);
     const CANVAS_WIDTH = useRef(document.documentElement.clientWidth/4);
     const CANVAS_HEIGHT = useRef(document.documentElement.clientWidth/2);
     const BLOCK_SIZE = useRef(CANVAS_WIDTH.current/10);
-    const pos = useRef([2,2]);
+    const pos = useRef(null);
     const time = useRef({start: 0, elapsed: 0, level: 1000});
-    const currentBlock = useRef(BLOCK[0]);
-    const currentBlockIndex = useRef(0);
-    const currentRotate = useRef(0);
-    const blockList = useRef(null);
+    const currentBlock = useRef(null);
+    const currentBlockIndex = useRef(null);
+    const currentRotate = useRef(null);
+    const blockList = useRef(Array.from(Array(7),(_,idx)=>idx));
     const board = useRef(Array.from(Array(20),()=>Array(10).fill(false)))
     const moveStop = useRef(false);
 
@@ -74,6 +75,20 @@ const Board = () => {
         }
     }
 
+    function GenerateBlock(){
+        let randomIndex = Math.floor((window.crypto.getRandomValues(new Uint32Array(1))/4294967296)*10);
+        while(randomIndex > blockList.current.length-1){//0~6사이의 랜덤한 숫자 나올때까지 반복
+            randomIndex = Math.floor((window.crypto.getRandomValues(new Uint32Array(1))/4294967296)*10);
+        }
+        currentBlockIndex.current = blockList.current.splice(randomIndex,1)[0];
+        currentBlock.current = BLOCK[currentBlockIndex.current];
+        currentRotate.current = 0;
+        pos.current=[...POS[currentBlockIndex.current]];
+        if(blockList.current.length === 0){
+            blockList.current = Array.from(Array(7),(_,idx)=>idx);
+        }
+    }
+
     function MoveRight(){
         Erase();
         pos.current[0]+=1;
@@ -122,12 +137,12 @@ const Board = () => {
                 LineCheck();
 
                 //좌표초기화
-                pos.current[0]=2;
-                pos.current[1]=2;
+                GenerateBlock();
                 break;
             case 3://게임종료
-                pos.current[1]-=1; 
                 moveStop.current=true;
+                pos.current[1]-=1;
+                alert('게임종료');
                 break;
             default:
                 break;
@@ -164,11 +179,11 @@ const Board = () => {
             LineCheck();
 
             //좌표 초기화
-            pos.current[0]=2;
-            pos.current[1]=2;
+            GenerateBlock();
         }else{//게임 종료시
-            pos.current[1]-=1; 
+            pos.current[1]-=1;
             moveStop.current=true;
+            alert('게임종료');
         }
         Draw();
     }
@@ -177,7 +192,7 @@ const Board = () => {
         const halfBlockSize = (currentBlock.current.length-1)/2;
         for(let i = pos.current[1]+halfBlockSize; i >= pos.current[1]-halfBlockSize; i--){
             let check = true;
-            if(i > 19){continue;}
+            if(i > 19||i<0){continue;}
             for(let j = 0; j < 10; j++){
                 if(!board.current[i][j]){check=false;break;}
             }
@@ -273,7 +288,11 @@ const Board = () => {
                     if(nx<0||nx>9||ny<0){
                         return 1;
                     }else if(ny>19||board.current[ny][nx]){//충돌
-                        if(ny === 0){return 3;}//맨위에서 충돌시 게임종료
+                        if(currentBlockIndex.current === 0){ //I블록이고, 중심 Y좌표가 1인경경우 게임종료 => 충돌시 항상 Y좌표를 1칸 내린상태에서 검사함으로 실제좌표와 1이 차이남
+                            if(pos.current[1]=== 1){return 3;}
+                        }else{ //I블록이 아니고, 중심Y좌표가 2인경우 게임종료
+                            if(pos.current[1]=== 2){return 3;}
+                        }
                         return 2;
                     }
                 }
@@ -296,6 +315,7 @@ const Board = () => {
     }
 
     useEffect(()=>{
+        GenerateBlock();
         CanvasInit();
         animate();
     },[])
@@ -317,7 +337,7 @@ const Board = () => {
             <canvas ref = {canvas}/>
             <ButtonContainer>
                 <Button onClick={Rotate}>회전</Button>
-                <Button onClick={MoveUp}>위쪽</Button>
+                <Button onClick={GenerateBlock}>블록생성</Button>
                 <Button onClick={MoveDown}>아래쪽</Button>
                 <Button onClick={MoveFloor}>맨 아래로 놓기</Button>
                 <Button onClick={CanvasInit}>캔퍼스그리기</Button>
