@@ -76,10 +76,7 @@ const Board = () => {
     }
 
     function GenerateBlock(){
-        let randomIndex = Math.floor((window.crypto.getRandomValues(new Uint32Array(1))/4294967296)*10);
-        while(randomIndex > blockList.current.length-1){//0~6사이의 랜덤한 숫자 나올때까지 반복
-            randomIndex = Math.floor((window.crypto.getRandomValues(new Uint32Array(1))/4294967296)*10);
-        }
+        let randomIndex = Math.floor((window.crypto.getRandomValues(new Uint32Array(1))/4294967296)*7);
         currentBlockIndex.current = blockList.current.splice(randomIndex,1)[0];
         currentBlock.current = BLOCK[currentBlockIndex.current];
         currentRotate.current = 0;
